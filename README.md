@@ -1,11 +1,12 @@
-# AI Engineering Harness — Track B (React / Medplum)
+# AI Engineering Harness — React / Medplum
 
 An autonomous AI engineering harness that takes a GitHub Issue and produces a pull request
-containing a React/TypeScript UI component. Same architecture as Track A (.NET) — hooks,
-commands, specialist agent, progressive disclosure context — adapted for a frontend stack
-(Vite, Vitest, MSW, Prettier instead of dotnet).
+containing a React/TypeScript UI component. Built on Claude Code native primitives: hooks
+enforce quality at every tool call, slash commands define the pipeline stages, and a specialist
+sub-agent does the implementation work inside an isolated git worktree.
 
-**Live repo:** https://github.com/SergeKauzunovich/intrahealth-harness-react
+**Harness repo:** https://github.com/SergeKauzunovich/intrahealth-harness-react
+**Work order (Issue #1):** https://github.com/SergeKauzunovich/intrahealth-harness-react-test/issues/1
 **Work order:** DrugInteractionPanel — clinician-facing interaction review component
 
 ---
@@ -47,11 +48,11 @@ Hooks fire at every tool call:
 .claude/
   settings.json                 ← hook wiring
   hooks/
-    validate-write-path.sh      ← block outside-worktree writes (verbatim from Track A)
-    block-destructive.sh        ← block destructive commands (verbatim from Track A)
-    log-bash-output.sh          ← npm gate results → JSONL (adapted: npm vs dotnet)
-    format-ts-files.sh          ← Prettier on .ts/.tsx edits (adapted: replaces dotnet format)
-    on-stop.sh                  ← session-end JSONL entry (verbatim from Track A)
+    validate-write-path.sh      ← block outside-worktree writes
+    block-destructive.sh        ← block destructive commands (rm -rf, git reset --hard, etc.)
+    log-bash-output.sh          ← npm gate results → JSONL
+    format-ts-files.sh          ← Prettier on .ts/.tsx edits
+    on-stop.sh                  ← session-end JSONL entry
   commands/
     harness.md                  ← /harness <issue-url>
     judge.md                    ← /judge — checks 14-point React acceptance checklist
@@ -141,7 +142,7 @@ mechanism text, consequence text, recommended action, and an acknowledge button.
 
 ## Context delivery — FHIR/Medplum cold-start
 
-The Track B context challenge: Medplum's React SDK is non-trivial. The harness delivers
+The Medplum context challenge: Medplum's React SDK is non-trivial. The harness delivers
 structured context so the agent doesn't need to explore `node_modules` or docs:
 
 **`medplum-types.md`** — Complete TypeScript type definitions: component props, FHIR
@@ -172,18 +173,17 @@ npm run lint         # ESLint, zero warnings
 
 ---
 
-## Differences from Track A
+## Stack
 
-| Aspect | Track A (.NET) | Track B (React) |
-|--------|----------------|-----------------|
-| Stack | .NET 8, xUnit, dotnet format | Vite, Vitest, Prettier |
-| log hook | watches `dotnet (build\|test\|format)` | watches `npm (build\|test\|run)` |
-| format hook | `dotnet format` on `.cs` | `npx prettier` on `.ts/.tsx` |
-| Agent | `drug-checker.md` | `react-ui-builder.md` |
-| Scaffold | `dotnet new webapi` | `npm create vite@latest` |
-| Network mock | WebApplicationFactory DI override | MSW (Mock Service Worker) |
-| Context docs | C# types + xUnit patterns | TS types + RTL + FHIR shapes |
-| Verbatim hooks | `validate-write-path.sh`, `block-destructive.sh`, `on-stop.sh` | Same 3 scripts |
+| Layer | Technology |
+|-------|-----------|
+| Runtime | Node 20, Vite, React 18, TypeScript strict |
+| Tests | Vitest + React Testing Library + MSW |
+| Formatting | Prettier (auto-applied by hook on every `.ts/.tsx` edit) |
+| Agent | `react-ui-builder.md` specialist |
+| Scaffold | `npm create vite@latest src/DrugInteractionUI -- --template react-ts` |
+| Network mock | MSW (Mock Service Worker) — no real calls in tests |
+| FHIR context | Pre-extracted types + hook signatures in `medplum-types.md` |
 
 ---
 

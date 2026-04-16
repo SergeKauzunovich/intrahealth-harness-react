@@ -15,7 +15,7 @@ Medplum FHIR resource shapes (`MedicationRequest`, `CodeableConcept`, `Coding`),
 ### `patterns/ui-builder-example.md`
 **Read if:** unsure about file layout, component structure, or how to wire Medplum hooks.
 Contains: scaffold directory tree, skeleton `DrugInteractionPanel.tsx`, skeleton
-`useInteractionCheck.ts` hook, `Program.cs`-equivalent DI wiring for Medplum provider.
+`useInteractionCheck.ts` hook, corrected `vite.config.ts` and tsconfig snippets.
 
 ### `patterns/react-testing-patterns.md`
 **Read if:** writing tests or setting up the Vitest + RTL + MSW test environment.
@@ -29,10 +29,21 @@ Contains: 3 patient scenarios (no interactions, moderate, major), sample
 
 ---
 
+## Observations (past-run lessons)
+
+### `observations/`
+**Read before scaffolding.** Contains one `.md` file per systemic problem encountered in
+previous runs. Each file has a **Prevention** section with exact commands or config to
+apply upfront. The harness loads all observation files and passes them to you — apply
+their prevention steps before you run the first `npm install`.
+
+---
+
 ## How to use this map
 
 The agent will:
 1. Always read `CLAUDE.md` (already injected as L1 context)
 2. Read this file to understand what's available
-3. Pull L2 docs only when relevant to the current implementation step
-4. Never read all docs at once — pull what you need, when you need it
+3. Read all observation files before writing any setup code
+4. Pull L2 pattern docs only when relevant to the current implementation step
+5. Never read all docs at once — pull what you need, when you need it

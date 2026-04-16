@@ -41,7 +41,7 @@ If the branch already exists: `git worktree add worktrees/issue-42 feature/issue
 
 Read `CLAUDE.md` and `harness-context/context-map.md`. These are always injected.
 
-### 5. Identify relevant L2 docs
+### 5. Identify relevant L2 docs + observations
 
 From the context-map, select which pattern docs apply to this ticket. For a React UI
 component ticket, all four L2 docs are relevant:
@@ -50,7 +50,12 @@ component ticket, all four L2 docs are relevant:
 - harness-context/patterns/react-testing-patterns.md
 - harness-context/examples/mock-fhir-data.md
 
-Read them now so you can pass their content to the agent.
+Also check the `observations/` directory:
+```bash
+ls observations/*.md 2>/dev/null
+```
+If any observation files exist, read them all. They contain lessons from previous runs
+that the agent must know before it writes any setup or scaffold code.
 
 ### 6. Spawn the react-ui-builder agent
 
@@ -59,21 +64,44 @@ Use the Agent tool to spawn `react-ui-builder`. Pass it:
 - The content of CLAUDE.md
 - The content of harness-context/context-map.md
 - The content of all four L2 docs
+- The content of all observation files (if any exist in `observations/`)
 - The absolute path to the worktree as its working directory
 - This explicit instruction: **"Do not signal completion until `npm run build` and
   `npm test -- --run` both pass. Run them yourself and self-correct on failures."**
 
-### 7. Evaluate completeness with /judge
+### 7. Spawn the improvement-agent
 
-When the react-ui-builder returns, invoke `/judge` with:
+After the react-ui-builder returns, spawn the `improvement-agent`. Pass it:
+- The react-ui-builder's full completion report
+- The worktree path
+- The absolute path to the `observations/` directory
+
+The improvement-agent will create or update files in `observations/` for any
+systemic issues the react-ui-builder had to fix.
+
+### 8. Run /code-annotator
+
+After the improvement-agent returns, invoke `/code-annotator` with the path to
+the worktree's source directory:
+
+```bash
+<worktree>/src/DrugInteractionUI/src
+```
+
+This adds JSDoc to all exported TypeScript symbols. Verify `npm run build` still
+passes after annotation.
+
+### 9. Evaluate completeness with /judge
+
+When annotation is complete, invoke `/judge` with:
 - The original ticket acceptance criteria (from the issue body)
 - The worktree path
 
 Track attempt count (starts at 1).
 
-### 8. Handle judge result
+### 10. Handle judge result
 
-**If `complete: true`:** proceed to step 9.
+**If `complete: true`:** proceed to step 11.
 
 **If `complete: false` and attempts < 3:**
 - Re-run the react-ui-builder (step 6) with the judge's `missing` and `concerns` appended:
@@ -83,13 +111,13 @@ Track attempt count (starts at 1).
 ```bash
 gh issue edit 42 --add-label "needs-human-review"  # skip if no GitHub
 ```
-Proceed to step 9 with the PR marked as draft.
+Proceed to step 11 with the PR marked as draft.
 
-### 9. Create the PR
+### 11. Create the PR
 
 Invoke `/create-pr`.
 
-### 10. Clean up
+### 12. Clean up
 
 ```bash
 rm -f .claude/current-issue .claude/current-worktree

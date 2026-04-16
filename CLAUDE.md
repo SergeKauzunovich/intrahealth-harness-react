@@ -14,7 +14,12 @@ npm create vite@latest src/DrugInteractionUI -- --template react-ts
 cd src/DrugInteractionUI
 npm install
 npm install @medplum/core @medplum/react
-npm install -D vitest @testing-library/react @testing-library/jest-dom @testing-library/user-event msw
+# @medplum/react requires the full Mantine suite + react-hooks as unlisted peer deps
+npm install @mantine/core @mantine/hooks @mantine/notifications \
+  @mantine/dates @mantine/form @mantine/modals \
+  @medplum/react-hooks --legacy-peer-deps
+npm install -D vitest @testing-library/react @testing-library/dom \
+  @testing-library/jest-dom @testing-library/user-event msw jsdom
 npm install -D eslint @typescript-eslint/eslint-plugin @typescript-eslint/parser
 cd ../..
 ```
@@ -23,22 +28,26 @@ Add to `src/DrugInteractionUI/package.json` scripts:
 ```json
 {
   "scripts": {
-    "build": "tsc && vite build",
+    "build": "tsc -b && vite build",
     "test": "vitest",
-    "lint": "eslint src --ext .ts,.tsx --max-warnings 0"
+    "lint": "eslint . --max-warnings 0"
   }
 }
 ```
 
-Add to `src/DrugInteractionUI/vite.config.ts`:
+Replace `src/DrugInteractionUI/vite.config.ts` — import from `vitest/config`, not `vite`:
 ```ts
-/// <reference types="vitest" />
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   test: { globals: true, environment: 'jsdom', setupFiles: './src/test/setup.ts' },
 })
+```
+
+Add `"vitest/globals"` to `types` in both `tsconfig.app.json` and `tsconfig.node.json`:
+```json
+"types": ["vite/client", "vitest/globals"]
 ```
 
 ## Directory layout

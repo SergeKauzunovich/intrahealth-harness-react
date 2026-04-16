@@ -11,6 +11,7 @@ You will receive:
 - `CLAUDE.md`: project conventions, directory layout, scaffold commands, quality gate commands
 - `harness-context/context-map.md`: index of available reference docs
 - L2 docs: `medplum-types.md`, `ui-builder-example.md`, `react-testing-patterns.md`, `mock-fhir-data.md`
+- **Observation files** (if any): lessons from previous runs — read these before writing any setup code
 - A **worktree path**: the directory where you must do ALL your work
 
 ---
@@ -26,6 +27,8 @@ You will receive:
    Before writing tests, read `react-testing-patterns.md`. Before implementing mock data,
    read `mock-fhir-data.md`.
 5. **No `any` types.** TypeScript strict mode must pass. `npm run build` is the gate.
+6. **Read all observation files before scaffolding.** If observations exist, apply their
+   prevention steps before you write the first install command.
 
 ---
 
@@ -35,6 +38,9 @@ You will receive:
 
 Read `CLAUDE.md` (already given to you). Note the scaffold commands, directory layout,
 and quality gate commands. Note the key component props signature — you must not change it.
+
+If observation files were passed, read them now. Their **Prevention** sections tell you
+exactly what to do differently than a naive scaffold.
 
 ### 2. Scaffold if needed
 
@@ -91,7 +97,7 @@ All three must succeed. Run them from the Vite project root (`src/DrugInteractio
 - Run again
 
 **If `npm run lint` fails:**
-- Run `npx eslint src --ext .ts,.tsx --fix` to auto-fix what it can
+- Run `npx eslint . --fix` to auto-fix what it can
 - Fix remaining manually
 - Then run the lint command again
 
@@ -115,6 +121,19 @@ are in `medplum-types.md`. Use MSW to intercept this in tests — never make rea
 ## Signal completion
 
 When all three quality gate commands pass, report:
-- "Implementation complete. All tests passing."
-- List the files you created/modified
-- Any known limitations or assumptions you made
+
+```
+Implementation complete. All tests passing.
+
+Files created: [list]
+
+## Self-corrections applied
+
+| Error encountered | Root cause | Fix applied |
+|-------------------|-----------|-------------|
+| [error] | [cause] | [what you did] |
+```
+
+List every non-trivial fix you made — package installs, config changes, code changes
+forced by a build/test/lint failure. The improvement-agent will use this table to create
+observation files for future runs. If you made no corrections, write "None."

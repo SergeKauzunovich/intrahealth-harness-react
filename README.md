@@ -26,11 +26,14 @@ GitHub Actions (.github/workflows/harness.yml)
   2. git worktree add worktrees/issue-N -b feature/issue-N
   3. Load L1 context: CLAUDE.md + context-map.md
   4. Load L2 context: medplum-types, ui-builder-example, react-testing-patterns, mock-fhir-data
-  5. Spawn react-ui-builder agent → works in worktree until build + tests pass
-  6. /judge evaluates completeness (fresh context, no memory of generation)
-  7. If gaps → retry react-ui-builder with gap list (max 3 attempts)
-  8. /create-pr assembles metadata + opens PR
-  9. git worktree remove (cleanup)
+  5. Load observations: past-run lessons from observations/ (if any exist)
+  6. Spawn react-ui-builder agent → works in worktree until build + tests pass
+  7. Spawn improvement-agent → captures self-corrections as new observation files
+  8. /code-annotator → adds JSDoc to all exported TypeScript symbols
+  9. /judge evaluates completeness (fresh context, no memory of generation)
+ 10. If gaps → retry react-ui-builder with gap list (max 3 attempts)
+ 11. /create-pr assembles metadata + opens PR
+ 12. git worktree remove (cleanup)
 ```
 
 Hooks fire at every tool call:
@@ -57,8 +60,10 @@ Hooks fire at every tool call:
     harness.md                  ← /harness <issue-url>
     judge.md                    ← /judge — checks 14-point React acceptance checklist
     create-pr.md                ← /create-pr
+    code-annotator.md           ← /code-annotator — adds JSDoc to exported TS symbols
   agents/
     react-ui-builder.md         ← specialist agent (implements the React component)
+    improvement-agent.md        ← captures self-corrections → writes observation files
   current-issue                 ← runtime state (gitignored)
   current-worktree              ← runtime state (gitignored)
 CLAUDE.md                       ← React/TypeScript project contract (≤200 lines)
@@ -70,6 +75,12 @@ harness-context/
     react-testing-patterns.md   ← Vitest + RTL + MSW patterns
   examples/
     mock-fhir-data.md           ← 3 FHIR patient scenarios (none/moderate/major interaction)
+observations/                   ← past-run lessons; loaded as context on every future run
+  medplum-react-peer-deps.md    ← install Mantine suite + react-hooks with --legacy-peer-deps
+  vitest-vite-config.md         ← import defineConfig from vitest/config; add vitest/globals types
+  eslint-flat-config.md         ← ESLint 9 flat config: use eslint . not --ext
+  react-hooks-setstate-in-effect.md ← don't call setState synchronously at effect top-level
+  testing-library-dom.md        ← install @testing-library/dom explicitly
 .github/
   workflows/
     harness.yml                 ← GitHub Actions trigger
@@ -160,6 +171,40 @@ delivered via the context map.
 
 ---
 
+## Self-improving harness — observations
+
+After every implementation, the `improvement-agent` runs and inspects what the
+`react-ui-builder` had to fix. Any systemic problem — missing peer dep, wrong config key,
+lint rule violation — becomes a file in `observations/`.
+
+On the next run, the harness loads all observation files and passes them to the agent
+before it writes a single line of setup code. The agent reads their **Prevention** sections
+and applies them upfront.
+
+The harness gets better with every run, without any human curation.
+
+```
+Run 1: agent hits 5 setup problems → improvement-agent creates 5 observation files
+Run 2: agent reads observations → applies all prevention steps → 0 setup problems
+Run 3: agent reads observations → any new problems → new observation files added
+```
+
+---
+
+## Code annotation — /code-annotator
+
+After the implementation agent finishes, `/code-annotator` adds JSDoc to every exported
+TypeScript symbol in the generated code:
+
+- Interfaces and type aliases — one-line description of the concept
+- Hooks — `@param` per argument, `@returns` describing the discriminated union
+- Components — one-line UI description
+- MSW handler arrays and mock data exports — purpose description
+
+Annotations are added before the judge evaluates, so the PR always ships documented code.
+
+---
+
 ## Quality gates
 
 ```bash
@@ -177,13 +222,15 @@ npm run lint         # ESLint, zero warnings
 
 | Layer | Technology |
 |-------|-----------|
-| Runtime | Node 20, Vite, React 18, TypeScript strict |
+| Runtime | Node 20, Vite, React 19, TypeScript strict |
 | Tests | Vitest + React Testing Library + MSW |
 | Formatting | Prettier (auto-applied by hook on every `.ts/.tsx` edit) |
 | Agent | `react-ui-builder.md` specialist |
 | Scaffold | `npm create vite@latest src/DrugInteractionUI -- --template react-ts` |
 | Network mock | MSW (Mock Service Worker) — no real calls in tests |
 | FHIR context | Pre-extracted types + hook signatures in `medplum-types.md` |
+| Self-improvement | `improvement-agent.md` → `observations/` — learned from each run |
+| Documentation | `/code-annotator` — JSDoc on all exported TS symbols |
 
 ---
 

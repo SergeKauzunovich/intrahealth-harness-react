@@ -1,0 +1,42 @@
+name: AI Harness
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  run-harness:
+    # Only fire when the 'ai-agent' label is added
+    if: github.event.label.name == 'ai-agent'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0        # full history required for git worktree
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Configure git identity (required for worktree commits)
+        run: |
+          git config --global user.email "harness@github-actions"
+          git config --global user.name "AI Harness"
+
+      - name: Run harness
+        working-directory: dev/react-harness
+        run: |
+          claude --print "/harness ${{ github.event.issue.html_url }}"
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_TOKEN:          ${{ secrets.GITHUB_TOKEN }}

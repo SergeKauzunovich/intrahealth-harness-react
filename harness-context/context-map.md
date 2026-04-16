@@ -39,6 +39,14 @@ their prevention steps before you run the first `npm install`.
 
 ---
 
+## Implementation plans
+
+### `implementation-plans/`
+Saved before implementation starts — one file per issue (`issue-N.md`). Created at
+**Human Checkpoint 2** and confirmed by the human before any code is written.
+
+---
+
 ## How to use this map
 
 The agent will:

@@ -23,17 +23,19 @@ GitHub Actions (.github/workflows/harness.yml)
         ▼
 /harness command orchestrates:
   1. Fetch issue body (GitHub API or local fixture)
-  2. git worktree add worktrees/issue-N -b feature/issue-N
-  3. Load L1 context: CLAUDE.md + context-map.md
-  4. Load L2 context: medplum-types, ui-builder-example, react-testing-patterns, mock-fhir-data
-  5. Load observations: past-run lessons from observations/ (if any exist)
-  6. Spawn react-ui-builder agent → works in worktree until build + tests pass
-  7. Spawn improvement-agent → captures self-corrections as new observation files
-  8. /code-annotator → adds JSDoc to all exported TypeScript symbols
-  9. /judge evaluates completeness (fresh context, no memory of generation)
- 10. If gaps → retry react-ui-builder with gap list (max 3 attempts)
- 11. /create-pr assembles metadata + opens PR
- 12. git worktree remove (cleanup)
+  ⛔ STOP 1 — human confirms requirements understanding
+  2. Load L1 + L2 context + observations
+  3. Draft implementation plan → saved to implementation-plans/issue-N.md
+  ⛔ STOP 2 — human confirms implementation plan
+  4. git worktree add worktrees/issue-N -b feature/issue-N
+  5. Spawn react-ui-builder agent → works in worktree until build + tests pass
+  6. Spawn improvement-agent → captures self-corrections as observation files
+  7. /code-annotator → adds JSDoc to all exported TypeScript symbols
+  8. /judge evaluates completeness (fresh context, no memory of generation)
+  9. If gaps → retry react-ui-builder with gap list (max 3 attempts)
+  ⛔ STOP 3 — human confirms branch, base, file list before commit
+ 10. /create-pr assembles metadata + opens PR
+ 11. git worktree remove (cleanup)
 ```
 
 Hooks fire at every tool call:
@@ -88,6 +90,7 @@ tests/
   test-hooks.sh                 ← 11 unit tests for hook scripts
   fixtures/
     issue-1.json                ← local demo issue
+implementation-plans/           ← saved at Checkpoint 2, confirmed before implementation starts
 logs/                           ← JSONL per issue (gitignored)
 worktrees/                      ← git worktrees (gitignored)
 ```

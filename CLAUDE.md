@@ -14,11 +14,14 @@ npm create vite@latest src/DrugInteractionUI -- --template react-ts
 cd src/DrugInteractionUI
 npm install
 npm install @medplum/core @medplum/react
-# @medplum/react requires the full Mantine suite + react-hooks as unlisted peer deps
-npm install @mantine/core @mantine/hooks @mantine/notifications \
-  @mantine/dates @mantine/form @mantine/modals \
-  @medplum/react-hooks --legacy-peer-deps
-npm install -D vitest @testing-library/react @testing-library/dom \
+# All Mantine packages must share the same major version (^7 matches @medplum/react peer dep).
+# Installing them in separate commands lets npm pick v9 for some — always pin @^7 together.
+npm install \
+  @mantine/core@^7 @mantine/hooks@^7 @mantine/notifications@^7 \
+  @mantine/dates@^7 @mantine/form@^7 @mantine/modals@^7 \
+  @medplum/react-hooks @testing-library/dom \
+  --legacy-peer-deps
+npm install -D vitest @testing-library/react \
   @testing-library/jest-dom @testing-library/user-event msw jsdom
 npm install -D eslint @typescript-eslint/eslint-plugin @typescript-eslint/parser
 cd ../..

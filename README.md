@@ -5,6 +5,8 @@ containing a React/TypeScript UI component. Built on Claude Code native primitiv
 enforce quality at every tool call, slash commands define the pipeline stages, and a specialist
 sub-agent does the implementation work inside an isolated git worktree.
 
+Just ask it to implement a feature and give it github or other project management software like Jira the issue link.
+
 **Harness repo:** https://github.com/SergeKauzunovich/intrahealth-harness-react
 **Work order (Issue #1):** https://github.com/SergeKauzunovich/intrahealth-harness-react-test/issues/1
 **Work order:** DrugInteractionPanel — clinician-facing interaction review component
